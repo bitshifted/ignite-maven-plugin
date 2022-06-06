@@ -1,0 +1,29 @@
+---
+id: 1234adf
+server-url: "http://localhost:8080"
+application-info:
+  splash-screen:
+    source: "path/to/image.png"
+  windows:
+    icons:
+      - source: "path/to/icon.ico"
+  linux:
+    icons:
+      - source: "path/to/icon.png"
+  mac:
+    icons:
+      - source: "/path/to/icon.icns"
+jvm:
+  vendor: ADOPTIUM
+  major-version: "17"
+  jvm-options: "-Xms10m -Xmx120m"
+  system-properties: "-Dprop1=value1 -Dprop2=value2"
+  main-class: com.myapp.MainClass
+  jar: my-artifact.jar # either jar or main-class should be specified
+  module-name: mymodule # module name in case app is modular
+  arguments: "arg1 arg2"
+resources:
+  - source: sample/files/dir1
+    target: files/dir1
+  - source: sample/files/simple.txt
+    target: simple.txt

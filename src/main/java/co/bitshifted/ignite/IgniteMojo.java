@@ -18,11 +18,13 @@ package co.bitshifted.ignite;
 
 import co.bitshifted.ignite.model.IgniteConfig;
 import co.bitshifted.ignite.model.JavaDependency;
+import co.bitshifted.ignite.util.ModuleChecker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -73,6 +75,7 @@ public class IgniteMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
+        ModuleChecker.initLogger(getLog());
         // load config file
         IgniteConfig config = loadConfiguration();
         if (config == null) {
@@ -111,6 +114,14 @@ public class IgniteMojo extends AbstractMojo {
                 d.setSha256(digestUtils.digestAsHex(d.getDependencyFile()));
             }
         }
+        // add build artifact to dependencies
+        Artifact artifact = mavenProject.getArtifact();
+        if (artifact.getFile() != null) {
+            JavaDependency mainArtifact = new JavaDependency(artifact);
+            mainArtifact.setSha256(digestUtils.digestAsHex(artifact.getFile()));
+            deps.add(mainArtifact);
+        }
+
         return deps;
     }
 }
