@@ -16,16 +16,19 @@ package co.bitshifted.ignite;
  * limitations under the License.
  */
 
+import co.bitshifted.ignite.dto.DeploymentDTO;
+import co.bitshifted.ignite.dto.JvmConfigurationDTO;
+import co.bitshifted.ignite.model.BasicResource;
 import co.bitshifted.ignite.model.IgniteConfig;
 import co.bitshifted.ignite.model.JavaDependency;
 import co.bitshifted.ignite.util.ModuleChecker;
+import co.bitshifted.ignite.resource.ResourceProducer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -82,16 +85,37 @@ public class IgniteMojo extends AbstractMojo {
             throw new MojoExecutionException("Aborting due to invalid or missing configuration file");
         }
 
+        DeploymentDTO deployment = new DeploymentDTO();
+        deployment.setId(config.getId());
+        deployment.setApplicationInfo(config.getApplicationInfo());
+        // jvm configuration
+        JvmConfigurationDTO jvmConfig = new JvmConfigurationDTO(config.getJvmConfiguration());
         try {
             List<JavaDependency> deps = calculateDependencies();
-            config.getJvmConfiguration().setDependencies(deps);
+            jvmConfig.setDependencies(deps);
+            deployment.setJvmConfiguration(jvmConfig);
+
+            // process app info resource
+            ResourceProducer producer = new ResourceProducer();
+            List<BasicResource> splash = producer.produceResources(config.getApplicationInfo().getSplashScreen());
+            deployment.getApplicationInfo().setSplashScreen(splash.get(0));
+            // process resources section
+            config.getResources().stream().forEach(r -> {
+                try {
+                    List<BasicResource> resources = producer.produceResources(r);
+                    deployment.addResources(resources);
+                } catch(IOException ex) {
+                    getLog().error("Failed to process resources", ex);
+                }
+
+            });
         } catch(IOException ex) {
             getLog().error("Failed to process dependencies", ex);
             throw new MojoExecutionException(ex);
         }
 
         try {
-            jsonObjectMapper.writeValue(System.out, config);
+            jsonObjectMapper.writeValue(System.out, deployment);
         } catch(IOException ex) {
             throw new MojoExecutionException(ex);
         }

@@ -27,6 +27,4 @@ public class JvmConfiguration {
     @JsonProperty("module-name")
     private String moduleName;
     private String arguments;
-
-    private List<JavaDependency> dependencies;
 }
