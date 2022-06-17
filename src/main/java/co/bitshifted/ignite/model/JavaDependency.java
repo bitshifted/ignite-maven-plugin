@@ -4,6 +4,7 @@ import co.bitshifted.ignite.util.ModuleChecker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.util.jar.JarFile;
 
 @Data
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class JavaDependency {
 

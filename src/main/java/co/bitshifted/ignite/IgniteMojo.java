@@ -17,7 +17,10 @@ package co.bitshifted.ignite;
  */
 
 import co.bitshifted.ignite.dto.DeploymentDTO;
+import co.bitshifted.ignite.dto.DeploymentStatusDTO;
 import co.bitshifted.ignite.dto.JvmConfigurationDTO;
+import co.bitshifted.ignite.exception.CommunicationException;
+import co.bitshifted.ignite.http.IgniteHttpClient;
 import co.bitshifted.ignite.model.BasicResource;
 import co.bitshifted.ignite.model.IgniteConfig;
 import co.bitshifted.ignite.model.JavaDependency;
@@ -39,6 +42,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.*;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static co.bitshifted.ignite.IgniteConstants.*;
@@ -115,9 +119,15 @@ public class IgniteMojo extends AbstractMojo {
         }
 
         try {
-            jsonObjectMapper.writeValue(System.out, deployment);
-        } catch(IOException ex) {
-            throw new MojoExecutionException(ex);
+            IgniteHttpClient client = new IgniteHttpClient(config.getServerUrl(), getLog());
+            String statusUrl = client.submitDeployment(deployment);
+            Optional<DeploymentStatusDTO> status = client.waitForStageOneCompleted(statusUrl);
+            if (status.isPresent()) {
+                jsonObjectMapper.writeValue(System.out, status.get());
+            }
+//            jsonObjectMapper.writeValue(System.out, deployment);
+        } catch(IOException | CommunicationException ex) {
+            throw new MojoExecutionException("failed to communicate with server", ex);
         }
 
     }
