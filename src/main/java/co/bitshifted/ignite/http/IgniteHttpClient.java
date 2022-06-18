@@ -58,7 +58,7 @@ public final class IgniteHttpClient {
     }
 
     public Optional<DeploymentStatusDTO> waitForStageOneCompleted(String url) {
-        logger.info("Waiting for status SUCCESS for deployment URL " + url);
+        logger.info("Waiting for status STAGE_ONE_COMPLETED for deployment URL " + url);
         Request request = new Request.Builder().url(url).get().build();
         for (int i = 0;i < MAX_RETRIES;i++) {
             Call call = client.newCall(request);
