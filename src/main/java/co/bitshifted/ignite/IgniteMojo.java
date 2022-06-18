@@ -1,24 +1,20 @@
-package co.bitshifted.ignite;
-
 /*
- * Copyright 2001-2005 The Apache Software Foundation.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  * Copyright (c) 2022  Bitshift D.O.O (http://bitshifted.co)
+ *  *
+ *  * This Source Code Form is subject to the terms of the Mozilla Public
+ *  * License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
+package co.bitshifted.ignite;
+
+import co.bitshifted.ignite.deploy.Packer;
 import co.bitshifted.ignite.dto.DeploymentDTO;
 import co.bitshifted.ignite.dto.DeploymentStatusDTO;
 import co.bitshifted.ignite.dto.JvmConfigurationDTO;
+import co.bitshifted.ignite.dto.RequiredResourcesDTO;
 import co.bitshifted.ignite.exception.CommunicationException;
 import co.bitshifted.ignite.http.IgniteHttpClient;
 import co.bitshifted.ignite.model.BasicResource;
@@ -41,8 +37,11 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static co.bitshifted.ignite.IgniteConstants.*;
@@ -118,17 +117,13 @@ public class IgniteMojo extends AbstractMojo {
             throw new MojoExecutionException(ex);
         }
 
-        try {
-            IgniteHttpClient client = new IgniteHttpClient(config.getServerUrl(), getLog());
-            String statusUrl = client.submitDeployment(deployment);
-            Optional<DeploymentStatusDTO> status = client.waitForStageOneCompleted(statusUrl);
-            if (status.isPresent()) {
-                jsonObjectMapper.writeValue(System.out, status.get());
-            }
-//            jsonObjectMapper.writeValue(System.out, deployment);
-        } catch(IOException | CommunicationException ex) {
-            throw new MojoExecutionException("failed to communicate with server", ex);
-        }
+
+        RequiredResourcesDTO requiredResources = submitDeployment(deployment, config.getServerUrl());
+        // create deployment package
+        String targetDir = mavenProject.getBuild().getOutputDirectory();
+        System.out.println("target dir: " + targetDir);
+        Packer packer = new Packer();
+        packer.createDeploymentPackage(deployment, requiredResources, Paths.get(targetDir, DEFAULT_IGNITE_OUTPUT_DIR));
 
     }
 
@@ -157,5 +152,19 @@ public class IgniteMojo extends AbstractMojo {
         }
 
         return deps;
+    }
+
+    private RequiredResourcesDTO submitDeployment(DeploymentDTO deployment, String serverUrl) throws MojoExecutionException {
+        try {
+            IgniteHttpClient client = new IgniteHttpClient(serverUrl, getLog());
+            String statusUrl = client.submitDeployment(deployment);
+            Optional<DeploymentStatusDTO> status = client.waitForStageOneCompleted(statusUrl);
+            if (status.isPresent()) {
+                jsonObjectMapper.writeValue(System.out, status.get());
+            }
+            return status.get().getRequiredResources();
+        } catch(IOException | CommunicationException ex) {
+            throw new MojoExecutionException("failed to communicate with server", ex);
+        }
     }
 }
