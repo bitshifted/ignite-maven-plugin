@@ -21,4 +21,5 @@ public class BasicResource {
     private String target;
     private String sha256;
     private Long size;
+    private String mimeType;
 }

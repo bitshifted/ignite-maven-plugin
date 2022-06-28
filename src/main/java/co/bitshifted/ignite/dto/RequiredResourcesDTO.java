@@ -18,6 +18,7 @@ import java.util.List;
 
 @Data
 public class RequiredResourcesDTO {
+    private String url;
     private List<JavaDependency> dependencies;
     private List<BasicResource> resources;
 }

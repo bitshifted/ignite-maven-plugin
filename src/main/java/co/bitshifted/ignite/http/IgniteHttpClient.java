@@ -10,6 +10,7 @@
 
 package co.bitshifted.ignite.http;
 
+import co.bitshifted.ignite.IgniteConstants;
 import co.bitshifted.ignite.dto.DeploymentDTO;
 import co.bitshifted.ignite.dto.DeploymentStatusDTO;
 import co.bitshifted.ignite.exception.CommunicationException;
@@ -17,8 +18,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.apache.maven.plugin.logging.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
+
+import static co.bitshifted.ignite.IgniteConstants.*;
 
 public final class IgniteHttpClient {
 
@@ -26,8 +32,9 @@ public final class IgniteHttpClient {
     private static final int HTTP_STATUS_OK = 200;
     private static final int WAIT_TIMEOUT_SEC = 10;
     private static final int MAX_RETRIES = 100;
-    private static final String DEPLOYMENTT_STATUS_HEADER = "X-Deployment-Status";
+    private static final String DEPLOYMENT_STATUS_HEADER = "X-Deployment-Status";
     private static final String DEPLOYMENT_SUBMIT_ENDPOINT = "/v1/deployments";
+    private static final String DEPLOYMENT_ARCHIVE_ENDPOINT = "/v1/deployments/{id}";
 
 
     private final String serverBaseUrl;
@@ -42,10 +49,14 @@ public final class IgniteHttpClient {
         this.logger = logger;
     }
 
+    public IgniteHttpClient(Log logger) {
+        this(null, logger);
+    }
+
     public String submitDeployment(DeploymentDTO deploymentDTO) throws CommunicationException {
         try {
             String text = objectMapper.writeValueAsString(deploymentDTO);
-            RequestBody body = RequestBody.create(text, MediaType.parse("application/json"));
+            RequestBody body = RequestBody.create(text, MediaType.parse(JSON_MIME_TYPE));
             Request request = new Request.Builder().url(serverBaseUrl + DEPLOYMENT_SUBMIT_ENDPOINT).post(body).build();
 
             Call call = client.newCall(request);
@@ -57,7 +68,7 @@ public final class IgniteHttpClient {
                 logger.error("Unexpected status from server");
                 throw new CommunicationException("Unexpected HTTP status: " + status + ", message: " + message);
             }
-            String headerValue = response.header(DEPLOYMENTT_STATUS_HEADER);
+            String headerValue = response.header(DEPLOYMENT_STATUS_HEADER);
             if (headerValue == null || headerValue.length() == 0) {
                 throw new CommunicationException("Empty status header received");
             }
@@ -94,5 +105,22 @@ public final class IgniteHttpClient {
 
         }
         return Optional.empty();
+    }
+
+    public void submitDeploymentArchive(String url, Path archive) throws CommunicationException {
+        logger.info("Submitting deployment archive...");
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            Files.copy(archive, bout);
+            bout.close();
+            RequestBody body = RequestBody.create(bout.toByteArray(), MediaType.parse(ZIP_MIME_TYPE));
+            Request request = new Request.Builder().put(body).url(url).build();
+            Call call = client.newCall(request);
+            Response response = call.execute();
+            logger.info("Received respons status: " + response.code());
+        } catch(IOException ex) {
+            throw new CommunicationException(ex);
+        }
+
     }
 }

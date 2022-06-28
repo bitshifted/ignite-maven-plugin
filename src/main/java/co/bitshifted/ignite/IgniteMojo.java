@@ -120,10 +120,19 @@ public class IgniteMojo extends AbstractMojo {
 
         RequiredResourcesDTO requiredResources = submitDeployment(deployment, config.getServerUrl());
         // create deployment package
-        String targetDir = mavenProject.getBuild().getOutputDirectory();
-        System.out.println("target dir: " + targetDir);
-        Packer packer = new Packer();
-        packer.createDeploymentPackage(deployment, requiredResources, Paths.get(targetDir, DEFAULT_IGNITE_OUTPUT_DIR));
+        String targetDir = mavenProject.getBuild().getDirectory();
+        Path deploymentArchive;
+        try {
+            Packer packer = new Packer(mavenProject.getBasedir().toPath(), jvmConfig.getDependencies());
+            deploymentArchive =  packer.createDeploymentPackage(deployment, requiredResources, Paths.get(targetDir, DEFAULT_IGNITE_OUTPUT_DIR));
+           getLog().info("Created deployment archive at " + deploymentArchive.toFile().getAbsolutePath());
+        } catch(IOException ex) {
+            getLog().error("Failed to create deployment package", ex);
+            throw new MojoExecutionException(ex);
+        }
+        // submit deployment archive
+        System.err.println("URL: " + requiredResources.getUrl());
+        submitDeploymentArchive(requiredResources.getUrl(), deploymentArchive);
 
     }
 
@@ -159,11 +168,19 @@ public class IgniteMojo extends AbstractMojo {
             IgniteHttpClient client = new IgniteHttpClient(serverUrl, getLog());
             String statusUrl = client.submitDeployment(deployment);
             Optional<DeploymentStatusDTO> status = client.waitForStageOneCompleted(statusUrl);
-            if (status.isPresent()) {
-                jsonObjectMapper.writeValue(System.out, status.get());
-            }
-            return status.get().getRequiredResources();
-        } catch(IOException | CommunicationException ex) {
+            RequiredResourcesDTO resource = status.get().getRequiredResources();
+            resource.setUrl(statusUrl);
+            return resource;
+        } catch(CommunicationException ex) {
+            throw new MojoExecutionException("failed to communicate with server", ex);
+        }
+    }
+
+    private void submitDeploymentArchive(String url, Path archive) throws MojoExecutionException {
+        try {
+            IgniteHttpClient client = new IgniteHttpClient(getLog());
+            client.submitDeploymentArchive(url, archive);
+        } catch(CommunicationException ex) {
             throw new MojoExecutionException("failed to communicate with server", ex);
         }
     }

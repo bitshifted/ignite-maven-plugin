@@ -35,6 +35,7 @@ public class ResourceFileVisitor extends SimpleFileVisitor<Path> {
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
         Path relativePath = workDir.relativize(file);
         input.setTarget(relativePath.toString());
+        input.setSource(relativePath.toString());
         BasicResource resource = ResourceProducer.toResource(file, input);
         resources.add(resource);
         return FileVisitResult.CONTINUE;

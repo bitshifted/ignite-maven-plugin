@@ -27,5 +27,11 @@ public class IgniteConstants {
     public static final String DEFAULT_CONFIG_FILE_NAME = "ignite-config.yml";
     public static final String DEFAULT_IGNITE_OUTPUT_DIR = "ignite";
 
+    public static final String DEPLOYMENT_JSON_FILE_NAME = "deployment.json";
+    public static final String DEPLOYMENT_ARCHIVE_FILE_NAME = "deployment.zip";
+
+    public static final String JSON_MIME_TYPE = "application/json";
+    public static final String ZIP_MIME_TYPE = "application/zip";
+
     public static final DigestUtils DIGEST_UTILS = new DigestUtils(MessageDigestAlgorithms.SHA_256);
 }
