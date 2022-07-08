@@ -56,7 +56,7 @@ public class Packer {
         Files.copy(Paths.get(outputDir.toFile().getAbsolutePath(), IgniteConstants.DEPLOYMENT_JSON_FILE_NAME), zout);
         // add resource entries
         requiredResourcesDTO.getResources().stream().forEach(res -> {
-            ZipEntry entry = new ZipEntry("resources/" + res.getSource());
+            ZipEntry entry = new ZipEntry("resources/" + res.getTarget());
             Path entryPath = baseDirectory.resolve(res.getSource());
             try {
                 zout.putNextEntry(entry);
@@ -68,7 +68,7 @@ public class Packer {
         // add missing dependencies
         List<JavaDependency> deps = dependencies.stream().filter(d -> requiredResourcesDTO.getDependencies().stream().anyMatch(dp -> dp.getSha256().equals(d.getSha256()))).collect(Collectors.toList());
         deps.stream().forEach(d -> {
-            ZipEntry entry = new ZipEntry("dependencies/" + d.getSha256() + ".jar");
+            ZipEntry entry = new ZipEntry("dependencies/" + d.getSha256());
             try {
                 zout.putNextEntry(entry);
                 Files.copy(d.getDependencyFile().toPath(), zout);

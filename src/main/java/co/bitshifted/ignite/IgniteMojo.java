@@ -131,7 +131,6 @@ public class IgniteMojo extends AbstractMojo {
             throw new MojoExecutionException(ex);
         }
         // submit deployment archive
-        System.err.println("URL: " + requiredResources.getUrl());
         submitDeploymentArchive(requiredResources.getUrl(), deploymentArchive);
 
     }
@@ -179,7 +178,9 @@ public class IgniteMojo extends AbstractMojo {
     private void submitDeploymentArchive(String url, Path archive) throws MojoExecutionException {
         try {
             IgniteHttpClient client = new IgniteHttpClient(getLog());
-            client.submitDeploymentArchive(url, archive);
+            String statusUrl = client.submitDeploymentArchive(url, archive);
+            Optional<DeploymentStatusDTO> status = client.waitForStageTwoCompleted(statusUrl);
+            getLog().info("Deployment completed. Status: " + status.get().getStatus());
         } catch(CommunicationException ex) {
             throw new MojoExecutionException("failed to communicate with server", ex);
         }
