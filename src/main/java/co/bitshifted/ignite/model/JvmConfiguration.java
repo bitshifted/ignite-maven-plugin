@@ -10,12 +10,12 @@
 
 package co.bitshifted.ignite.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import co.bitshifted.ignite.common.dto.JvmConfigurationDTO;
+import co.bitshifted.ignite.common.model.JavaVersion;
+import co.bitshifted.ignite.common.model.JvmVendor;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -23,7 +23,7 @@ public class JvmConfiguration {
 
     private JvmVendor vendor;
     @JsonProperty("major-version")
-    private JavaMajorVersion majorVersion;
+    private JavaVersion majorVersion;
     @JsonProperty("fixed-version")
     private String fixedVersion;
 
@@ -37,4 +37,18 @@ public class JvmConfiguration {
     @JsonProperty("module-name")
     private String moduleName;
     private String arguments;
+
+    public JvmConfigurationDTO toDto() {
+        JvmConfigurationDTO dto = new JvmConfigurationDTO();
+        dto.setVendor(vendor);
+        dto.setMajorVersion(majorVersion);
+        dto.setFixedVersion(fixedVersion);
+        dto.setJvmOptions(jvmOptions);
+        dto.setSystemProperties(systemProperties);
+        dto.setMainClass(mainClass);
+        dto.setJar(jar);
+        dto.setModuleName(moduleName);
+        dto.setArguments(arguments);
+        return dto;
+    }
 }

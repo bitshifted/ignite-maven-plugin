@@ -10,6 +10,7 @@
 
 package co.bitshifted.ignite.model;
 
+import co.bitshifted.ignite.common.dto.JavaDependencyDTO;
 import co.bitshifted.ignite.util.ModuleChecker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -48,5 +49,18 @@ public class JavaDependency {
             this.size = artifact.getFile().length();
             this.modular = ModuleChecker.checkForModuleInfo(artifact.getFile());
         }
+    }
+
+    public JavaDependencyDTO toDto() {
+        JavaDependencyDTO dto = new JavaDependencyDTO();
+        dto.setGroupId(groupId);
+        dto.setArtifactId(artifactId);
+        dto.setVersion(version);
+        dto.setType(type);
+        dto.setClassifier(classifier);
+        dto.setSha256(sha256);
+        dto.setSize(size);
+        dto.setModular(modular);
+        return dto;
     }
 }

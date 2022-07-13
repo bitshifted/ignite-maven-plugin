@@ -10,6 +10,8 @@
 
 package co.bitshifted.ignite.model;
 
+import co.bitshifted.ignite.common.model.ApplicationInfo;
+import co.bitshifted.ignite.common.model.BasicResource;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -18,7 +20,8 @@ import java.util.List;
 @Data
 public class IgniteConfig {
 
-    private String id;
+    @JsonProperty("application-id")
+    private String applicationId;
     @JsonProperty("server-url")
     private String serverUrl;
     @JsonProperty("application-info")

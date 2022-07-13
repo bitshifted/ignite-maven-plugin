@@ -10,7 +10,8 @@
 
 package co.bitshifted.ignite.resource;
 
-import co.bitshifted.ignite.model.BasicResource;
+
+import co.bitshifted.ignite.common.model.BasicResource;
 
 import java.io.IOException;
 import java.nio.file.Files;

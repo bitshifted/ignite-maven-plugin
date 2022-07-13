@@ -8,14 +8,13 @@
  *
  */
 
-package co.bitshifted.ignite.model;
+package co.bitshifted.ignite.http;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import co.bitshifted.ignite.common.dto.RequiredResourcesDTO;
 import lombok.Data;
 
-
 @Data
-public class IconInfo extends FileInfo {
-    @JsonProperty("os")
-    private OperatingSystem operatingSystem;
+public class SubmitDeploymentResponse {
+    private RequiredResourcesDTO requiredResourcesDTO;
+    private String url;
 }

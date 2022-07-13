@@ -10,9 +10,9 @@
 
 package co.bitshifted.ignite.http;
 
-import co.bitshifted.ignite.IgniteConstants;
-import co.bitshifted.ignite.dto.DeploymentDTO;
-import co.bitshifted.ignite.dto.DeploymentStatusDTO;
+import co.bitshifted.ignite.common.dto.DeploymentDTO;
+import co.bitshifted.ignite.common.dto.DeploymentStatusDTO;
+import co.bitshifted.ignite.common.model.DeploymentStatus;
 import co.bitshifted.ignite.exception.CommunicationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
@@ -24,7 +24,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import static co.bitshifted.ignite.IgniteConstants.*;
+import static co.bitshifted.ignite.IgniteConstants.JSON_MIME_TYPE;
+import static co.bitshifted.ignite.IgniteConstants.ZIP_MIME_TYPE;
 
 public final class IgniteHttpClient {
 
@@ -86,7 +87,7 @@ public final class IgniteHttpClient {
                 Response response = call.execute();
                 if(response.code() == HTTP_STATUS_OK) {
                     DeploymentStatusDTO dto = objectMapper.readValue(response.body().string(), DeploymentStatusDTO.class);
-                    if ("STAGE_ONE_COMPLETED".equals(dto.getStatus())) {
+                    if (dto.getStatus() == DeploymentStatus.STAGE_ONE_COMPLETED) {
                         logger.info("Stage one completed successfully!!");
                         return Optional.of(dto);
                     } else {
@@ -144,7 +145,7 @@ public final class IgniteHttpClient {
                 Response response = call.execute();
                 if(response.code() == HTTP_STATUS_OK) {
                     DeploymentStatusDTO dto = objectMapper.readValue(response.body().string(), DeploymentStatusDTO.class);
-                    if ("SUCCESS".equals(dto.getStatus()) || "FAILED".equals(dto.getStatus())) {
+                    if (dto.getStatus() == DeploymentStatus.SUCCESS || dto.getStatus() == DeploymentStatus.FAILED) {
                         logger.info("Stage two completed!!");
                         return Optional.of(dto);
                     } else {

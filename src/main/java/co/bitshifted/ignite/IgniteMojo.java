@@ -10,20 +10,20 @@
 
 package co.bitshifted.ignite;
 
+import co.bitshifted.ignite.common.dto.DeploymentDTO;
+import co.bitshifted.ignite.common.dto.DeploymentStatusDTO;
+import co.bitshifted.ignite.common.dto.JvmConfigurationDTO;
+import co.bitshifted.ignite.common.dto.RequiredResourcesDTO;
+import co.bitshifted.ignite.common.model.BasicResource;
 import co.bitshifted.ignite.deploy.Packer;
-import co.bitshifted.ignite.dto.DeploymentDTO;
-import co.bitshifted.ignite.dto.DeploymentStatusDTO;
-import co.bitshifted.ignite.dto.JvmConfigurationDTO;
-import co.bitshifted.ignite.dto.RequiredResourcesDTO;
 import co.bitshifted.ignite.exception.CommunicationException;
 import co.bitshifted.ignite.http.IgniteHttpClient;
-import co.bitshifted.ignite.model.BasicResource;
+import co.bitshifted.ignite.http.SubmitDeploymentResponse;
 import co.bitshifted.ignite.model.IgniteConfig;
 import co.bitshifted.ignite.model.JavaDependency;
-import co.bitshifted.ignite.util.ModuleChecker;
 import co.bitshifted.ignite.resource.ResourceProducer;
+import co.bitshifted.ignite.util.ModuleChecker;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
@@ -36,18 +36,20 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static co.bitshifted.ignite.IgniteConstants.*;
 
 /**
- * Goal which touches a timestamp file.
+ * Goal which deploys application to configured server.
  *
  * @goal touch
  * @phase process-sources
@@ -58,7 +60,6 @@ import static co.bitshifted.ignite.IgniteConstants.*;
 public class IgniteMojo extends AbstractMojo {
 
     private final ObjectMapper yamlObjectMapper;
-    private final ObjectMapper jsonObjectMapper;
     private final DigestUtils digestUtils;
 
     IgniteMojo(MavenProject project, File configFile ) {
@@ -69,7 +70,6 @@ public class IgniteMojo extends AbstractMojo {
 
     public IgniteMojo() {
         this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
-        this.jsonObjectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
         this.digestUtils = new DigestUtils(MessageDigestAlgorithms.SHA_256);
     }
 
@@ -89,13 +89,13 @@ public class IgniteMojo extends AbstractMojo {
         }
 
         DeploymentDTO deployment = new DeploymentDTO();
-        deployment.setId(config.getId());
+        deployment.setApplicationId(config.getApplicationId());
         deployment.setApplicationInfo(config.getApplicationInfo());
         // jvm configuration
-        JvmConfigurationDTO jvmConfig = new JvmConfigurationDTO(config.getJvmConfiguration());
+        JvmConfigurationDTO jvmConfig = config.getJvmConfiguration().toDto();
         try {
             List<JavaDependency> deps = calculateDependencies();
-            jvmConfig.setDependencies(deps);
+            jvmConfig.setDependencies(deps.stream().map(JavaDependency::toDto).collect(Collectors.toList()));
             deployment.setJvmConfiguration(jvmConfig);
 
             // process app info resource
@@ -118,20 +118,20 @@ public class IgniteMojo extends AbstractMojo {
         }
 
 
-        RequiredResourcesDTO requiredResources = submitDeployment(deployment, config.getServerUrl());
+        SubmitDeploymentResponse response = submitDeployment(deployment, config.getServerUrl());
         // create deployment package
         String targetDir = mavenProject.getBuild().getDirectory();
         Path deploymentArchive;
         try {
-            Packer packer = new Packer(mavenProject.getBasedir().toPath(), jvmConfig.getDependencies());
-            deploymentArchive =  packer.createDeploymentPackage(deployment, requiredResources, Paths.get(targetDir, DEFAULT_IGNITE_OUTPUT_DIR));
+            Packer packer = new Packer(mavenProject.getBasedir().toPath(), calculateDependencies());
+            deploymentArchive =  packer.createDeploymentPackage(deployment, response.getRequiredResourcesDTO(), Paths.get(targetDir, DEFAULT_IGNITE_OUTPUT_DIR));
            getLog().info("Created deployment archive at " + deploymentArchive.toFile().getAbsolutePath());
         } catch(IOException ex) {
             getLog().error("Failed to create deployment package", ex);
             throw new MojoExecutionException(ex);
         }
         // submit deployment archive
-        submitDeploymentArchive(requiredResources.getUrl(), deploymentArchive);
+        submitDeploymentArchive(response.getUrl(), deploymentArchive);
 
     }
 
@@ -145,7 +145,7 @@ public class IgniteMojo extends AbstractMojo {
     }
 
     private List<JavaDependency> calculateDependencies() throws IOException {
-        List<JavaDependency> deps = mavenProject.getArtifacts().stream().filter(d -> !d.getScope().equals("test")).map(d -> new JavaDependency(d)).collect(Collectors.toList());
+        List<JavaDependency> deps = mavenProject.getArtifacts().stream().filter(d -> !d.getScope().equals("test")).map(JavaDependency::new).collect(Collectors.toList());
         for(JavaDependency d : deps) {
             if (d.getDependencyFile() != null) {
                 d.setSha256(digestUtils.digestAsHex(d.getDependencyFile()));
@@ -162,14 +162,17 @@ public class IgniteMojo extends AbstractMojo {
         return deps;
     }
 
-    private RequiredResourcesDTO submitDeployment(DeploymentDTO deployment, String serverUrl) throws MojoExecutionException {
+    private SubmitDeploymentResponse submitDeployment(DeploymentDTO deployment, String serverUrl) throws MojoExecutionException {
         try {
             IgniteHttpClient client = new IgniteHttpClient(serverUrl, getLog());
             String statusUrl = client.submitDeployment(deployment);
             Optional<DeploymentStatusDTO> status = client.waitForStageOneCompleted(statusUrl);
             RequiredResourcesDTO resource = status.get().getRequiredResources();
-            resource.setUrl(statusUrl);
-            return resource;
+            SubmitDeploymentResponse response = new SubmitDeploymentResponse();
+            response.setRequiredResourcesDTO(resource);
+            response.setUrl(statusUrl);
+
+            return response;
         } catch(CommunicationException ex) {
             throw new MojoExecutionException("failed to communicate with server", ex);
         }

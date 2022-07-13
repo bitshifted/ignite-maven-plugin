@@ -11,8 +11,8 @@
 package co.bitshifted.ignite.deploy;
 
 import co.bitshifted.ignite.IgniteConstants;
-import co.bitshifted.ignite.dto.DeploymentDTO;
-import co.bitshifted.ignite.dto.RequiredResourcesDTO;
+import co.bitshifted.ignite.common.dto.DeploymentDTO;
+import co.bitshifted.ignite.common.dto.RequiredResourcesDTO;
 import co.bitshifted.ignite.model.JavaDependency;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

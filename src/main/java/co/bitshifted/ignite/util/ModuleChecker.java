@@ -11,7 +11,6 @@
 package co.bitshifted.ignite.util;
 
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.apache.maven.plugin.logging.Log;
 
 import java.io.File;
