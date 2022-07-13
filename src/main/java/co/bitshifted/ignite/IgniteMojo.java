@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -102,6 +103,10 @@ public class IgniteMojo extends AbstractMojo {
             ResourceProducer producer = new ResourceProducer();
             List<BasicResource> splash = producer.produceResources(config.getApplicationInfo().getSplashScreen());
             deployment.getApplicationInfo().setSplashScreen(splash.get(0));
+            deployment.getApplicationInfo().setIcons(convertResources(config.getApplicationInfo().getIcons(), producer));
+            deployment.getApplicationInfo().getLinux().setIcons(convertResources(config.getApplicationInfo().getLinux().getIcons(), producer));
+            deployment.getApplicationInfo().getMac().setIcons(convertResources(config.getApplicationInfo().getMac().getIcons(), producer));
+            deployment.getApplicationInfo().getWindows().setIcons(convertResources(config.getApplicationInfo().getWindows().getIcons(), producer));
             // process resources section
             config.getResources().stream().forEach(r -> {
                 try {
@@ -187,5 +192,15 @@ public class IgniteMojo extends AbstractMojo {
         } catch(CommunicationException ex) {
             throw new MojoExecutionException("failed to communicate with server", ex);
         }
+    }
+
+    private List<BasicResource> convertResources(List<BasicResource> input, ResourceProducer producer) throws IOException {
+        List<BasicResource> output = new ArrayList<>();
+        if (input != null && !input.isEmpty()) {
+           for(BasicResource br : input) {
+               output.addAll(producer.produceResources(br));
+           }
+        }
+        return output;
     }
 }
