@@ -43,6 +43,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -90,6 +91,7 @@ public class IgniteMojo extends AbstractMojo {
         }
 
         DeploymentDTO deployment = new DeploymentDTO();
+        deployment.setVersion(mavenProject.getVersion());
         deployment.setApplicationId(config.getApplicationId());
         deployment.setApplicationInfo(config.getApplicationInfo());
         // jvm configuration
@@ -107,6 +109,10 @@ public class IgniteMojo extends AbstractMojo {
             deployment.getApplicationInfo().getLinux().setIcons(convertResources(config.getApplicationInfo().getLinux().getIcons(), producer));
             deployment.getApplicationInfo().getMac().setIcons(convertResources(config.getApplicationInfo().getMac().getIcons(), producer));
             deployment.getApplicationInfo().getWindows().setIcons(convertResources(config.getApplicationInfo().getWindows().getIcons(), producer));
+            BasicResource license = config.getApplicationInfo().getLicense();
+            if(license != null) {
+                deployment.getApplicationInfo().setLicense(convertResources(Collections.singletonList(license), producer).get(0));
+            }
             // process resources section
             config.getResources().stream().forEach(r -> {
                 try {

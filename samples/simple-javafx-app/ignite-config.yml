@@ -2,6 +2,10 @@
 application-id: kq9Dra2hwGN
 server-url: "http://localhost:8080"
 application-info:
+  license:
+    source: "GPLv2"
+    target: LICENSE
+  exe-name: "simplejavafx"
   splash-screen:
     source: "splash.png"
   windows:
@@ -19,9 +23,9 @@ jvm:
   major-version: "17"
   jvm-options: "-Xms10m -Xmx120m"
   system-properties: "-Dprop1=value1 -Dprop2=value2"
-  main-class: com.myapp.MainClass
-  jar: my-artifact.jar # either jar or main-class should be specified
-  module-name: mymodule # module name in case app is modular
+  main-class: com.test.TestFX.TestFX
+  #jar: my-artifact.jar # either jar or main-class should be specified
+  module-name: com.test.testfx # module name in case app is modular
   arguments: "arg1 arg2"
 resources:
   - source: files
