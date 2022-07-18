@@ -32,6 +32,7 @@ public class IgniteConstants {
 
     public static final String JSON_MIME_TYPE = "application/json";
     public static final String ZIP_MIME_TYPE = "application/zip";
+    public static final String MAVEN_CENTRAL_REPO_BASE_URL = "https://repo.maven.apache.org/maven2";
 
     public static final DigestUtils DIGEST_UTILS = new DigestUtils(MessageDigestAlgorithms.SHA_256);
 }

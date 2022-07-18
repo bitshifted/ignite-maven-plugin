@@ -14,22 +14,29 @@ import co.bitshifted.ignite.common.dto.JavaDependencyDTO;
 import co.bitshifted.ignite.util.ModuleChecker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.apache.maven.artifact.Artifact;
 
 import java.io.File;
 
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class JavaDependency {
 
+    @EqualsAndHashCode.Include
     private String groupId;
+    @EqualsAndHashCode.Include
     private String artifactId;
+    @EqualsAndHashCode.Include
     private String version;
+    @EqualsAndHashCode.Include
     private String type;
+    @EqualsAndHashCode.Include
     private String classifier;
+    @EqualsAndHashCode.Include
     private String sha256;
     private long size;
     private boolean modular;
@@ -37,6 +44,8 @@ public class JavaDependency {
 
     @JsonIgnore
     private File dependencyFile;
+    @JsonIgnore
+    private Artifact artifact;
 
     public JavaDependency(Artifact artifact) {
         this.groupId = artifact.getGroupId();
@@ -45,10 +54,23 @@ public class JavaDependency {
         this.type = artifact.getType();
         this.classifier = artifact.getClassifier();
         this.dependencyFile = artifact.getFile();
+        this.artifact = artifact;
         if (artifact.getFile() != null) {
             this.size = artifact.getFile().length();
             this.modular = ModuleChecker.checkForModuleInfo(artifact.getFile());
         }
+    }
+
+    public JavaDependency(Artifact artifact, File file) {
+        this.groupId = artifact.getGroupId();
+        this.artifactId = artifact.getArtifactId();
+        this.version = artifact.getVersion();
+        this.type = artifact.getType();
+        this.classifier = artifact.getClassifier();
+        this.dependencyFile = artifact.getFile();
+        this.artifact = artifact;
+        this.size = file.length();
+        this.modular = ModuleChecker.checkForModuleInfo(file);
     }
 
     public JavaDependencyDTO toDto() {
