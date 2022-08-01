@@ -2,6 +2,11 @@
 application-id: kq9Dra2hwGN
 server-url: "http://localhost:8080"
 application-info:
+  home-page: "https://github.com/bitshifted/ignite-maven-plugin"
+  authors:
+    - name: John Doe
+      email: john@doe.com
+      website: "https://www.johndoe.com"
   license:
     source: "GPLv2"
     target: LICENSE
@@ -12,6 +17,9 @@ application-info:
     icons:
       - source: "icon_win.ico"
   linux:
+    categories:
+      - "Development"
+      - "Building"
     icons:
       - source: "icon_x48.png"
       - source: "icon_x64.png"

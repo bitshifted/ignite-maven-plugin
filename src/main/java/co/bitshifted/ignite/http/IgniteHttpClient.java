@@ -31,8 +31,8 @@ public final class IgniteHttpClient {
 
     private static final int HTTP_STATUS_ACCEPTED = 202;
     private static final int HTTP_STATUS_OK = 200;
-    private static final int WAIT_TIMEOUT_SEC = 10;
-    private static final int MAX_RETRIES = 100;
+    private static final int WAIT_TIMEOUT_SEC = 5;
+    private static final int MAX_RETRIES = 720;
     private static final String DEPLOYMENT_STATUS_HEADER = "X-Deployment-Status";
     private static final String DEPLOYMENT_SUBMIT_ENDPOINT = "/v1/deployments";
 
