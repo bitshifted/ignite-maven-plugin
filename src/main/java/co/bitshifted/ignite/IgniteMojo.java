@@ -23,7 +23,6 @@ import co.bitshifted.ignite.http.IgniteHttpClient;
 import co.bitshifted.ignite.http.SubmitDeploymentResponse;
 import co.bitshifted.ignite.model.IgniteConfig;
 import co.bitshifted.ignite.model.JavaDependency;
-import co.bitshifted.ignite.model.JvmConfiguration;
 import co.bitshifted.ignite.resource.ResourceProducer;
 import co.bitshifted.ignite.util.ModuleChecker;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +42,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static co.bitshifted.ignite.IgniteConstants.*;
@@ -105,9 +107,9 @@ public class IgniteMojo extends AbstractMojo {
         try {
             deps = dependencyProcessor.resolveDependencies(config.getApplicationInfo().getSupportedOperatingSystems());
             jvmConfig.setDependencies(deps.getCommon().stream().map(JavaDependency::toDto).collect(Collectors.toList()));
-            JvmConfigurationDTO linuxCOnfig = new JvmConfigurationDTO();
-            linuxCOnfig.setDependencies(deps.getLinux().stream().map(JavaDependency::toDto).collect(Collectors.toList()));
-            jvmConfig.setLinuxConfig(linuxCOnfig);
+            JvmConfigurationDTO linuxConfig = new JvmConfigurationDTO();
+            linuxConfig.setDependencies(deps.getLinux().stream().map(JavaDependency::toDto).collect(Collectors.toList()));
+            jvmConfig.setLinuxConfig(linuxConfig);
 
             JvmConfigurationDTO winConfig = new JvmConfigurationDTO();
             winConfig.setDependencies(deps.getWindows().stream().map(JavaDependency::toDto).collect(Collectors.toList()));
@@ -171,24 +173,6 @@ public class IgniteMojo extends AbstractMojo {
             return null;
         }
     }
-
-//    private List<JavaDependency> calculateDependencies() throws IOException {
-//        List<JavaDependency> deps = mavenProject.getArtifacts().stream().filter(d -> !d.getScope().equals("test")).map(JavaDependency::new).collect(Collectors.toList());
-//        for(JavaDependency d : deps) {
-//            if (d.getDependencyFile() != null) {
-//                d.setSha256(digestUtils.digestAsHex(d.getDependencyFile()));
-//            }
-//        }
-//        // add build artifact to dependencies
-//        Artifact artifact = mavenProject.getArtifact();
-//        if (artifact.getFile() != null) {
-//            JavaDependency mainArtifact = new JavaDependency(artifact);
-//            mainArtifact.setSha256(digestUtils.digestAsHex(artifact.getFile()));
-//            deps.add(mainArtifact);
-//        }
-//
-//        return deps;
-//    }
 
     private SubmitDeploymentResponse submitDeployment(DeploymentDTO deployment, String serverUrl) throws MojoExecutionException {
         try {

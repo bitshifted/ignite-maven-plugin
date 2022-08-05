@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -103,7 +102,6 @@ public class DependencyProcessor {
                         );
                     } catch (MojoExecutionException ex) {
                         loger.error("Failed to get artifact " + artifact, ex);
-//                        ex.printStackTrace();
                     }
                 });
 

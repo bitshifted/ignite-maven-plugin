@@ -60,10 +60,13 @@ public class DependencyResolutionResult {
         switch (os) {
             case LINUX:
                 linux = dependencies;
+                break;
             case MAC:
                 mac = dependencies;
+                break;
             case WINDOWS:
                 windows = dependencies;
+                break;
         }
     }
 }
