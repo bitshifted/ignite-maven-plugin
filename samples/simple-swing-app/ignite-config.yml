@@ -1,7 +1,11 @@
 ---
-id: 1234adf
+application-id: qpBdwMxiG1m
 server-url: "http://localhost:8080"
 application-info:
+  license:
+    source: "GPLv3"
+    target: LICENSE
+  exe-name: simpleswing
   splash-screen:
     source: "splash.png"
   windows:
@@ -16,15 +20,12 @@ application-info:
       - source: "icon_osx.icns"
 jvm:
   vendor: ADOPTIUM
-  major-version: "17"
+  major-version: "8"
   jvm-options: "-Xms10m -Xmx120m"
   system-properties: "-Dprop1=value1 -Dprop2=value2"
-  main-class: com.myapp.MainClass
-  jar: my-artifact.jar # either jar or main-class should be specified
-  module-name: mymodule # module name in case app is modular
+  main-class: org.example.SwingTest
   arguments: "arg1 arg2"
 resources:
-  - source: files
-  - source: GPLv2
+  - source: GPLv3
     target: LICENSE
 
